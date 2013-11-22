@@ -13,8 +13,10 @@
 
 #endif
 
-int cserial_init(struct serial_port *port)
+int cserial_init(struct serial_port *port, struct serial_port_conf *conf)
 {
+	unsigned int baud, csize, stopbits, parity, flowcontrol_hw;
+	int ret = 0;
 #ifdef WIN32
 	DCB conf;
 	COMMTIMEOUTS timeouts;
@@ -46,22 +48,114 @@ int cserial_init(struct serial_port *port)
 	tcgetattr(port->fd, &port->oldtio);
 	/* clear struct for new port settings */
 	memset(&port->tio, 0, sizeof(port->tio));
-	cfmakeraw(&port->tio);
-	cfsetospeed(&port->tio, B115200);
-	cfsetispeed(&port->tio, B115200);
-	port->tio.c_cflag |= CS8 | CREAD | CLOCAL;
-	port->tio.c_iflag &= ~(ICRNL | INLCR);
-	port->tio.c_oflag &= ~(ONLCR);
+	tcgetattr(port->fd, &port->tio);
+	/*cfmakeraw(&port->tio);*/
+
+	/* Baud rate */
+	if (conf->baud >= 230400) {
+		baud = B230400;
+	} else if (conf->baud >= 115200) {
+		baud = B115200;
+	} else if (conf->baud >= 57600) {
+		baud = B57600;
+	} else if (conf->baud >= 38400) {
+		baud = B38400;
+	} else if (conf->baud >= 19200) {
+		baud = B19200;
+	} else if (conf->baud >= 9600) {
+		baud = B9600;
+	} else if (conf->baud >= 4800) {
+		baud = B4800;
+	} else if (conf->baud >= 2400) {
+		baud = B2400;
+	} else if (conf->baud >= 1800) {
+		baud = B1800;
+	} else if (conf->baud >= 1200) {
+		baud = B1200;
+	} else if (conf->baud >= 600) {
+		baud = B600;
+	} else if (conf->baud >= 300) {
+		baud = B300;
+	} else if (conf->baud >= 200) {
+		baud = B200;
+	} else if (conf->baud >= 150) {
+		baud = B150;
+	} else if (conf->baud >= 134) {
+		baud = B134;
+	} else if (conf->baud >= 110) {
+		baud = B110;
+	} else if (conf->baud >= 75) {
+		baud = B75;
+	} else if (conf->baud >= 50) {
+		baud = B50;
+	} else {
+		baud = B0;
+	}
+	cfsetospeed(&port->tio, baud);
+	cfsetispeed(&port->tio, baud);
+
+	/* Character size */
+	if (conf->csize >= 8) {
+		csize = CS8;
+	} else if (conf->csize >= 7) {
+		csize = CS7;
+	} else if (conf->csize >= 6) {
+		csize = CS6;
+	} else {
+		csize = CS5;
+	}
+
+	/* Parity */
+	switch (conf->parity) {
+	case PARITY_ODD:
+		parity = (PARENB | PARODD);
+		break;
+	case PARITY_EVEN:
+		parity = (PARENB);
+		parity &= ~(PARODD);
+		break;
+	case PARITY_NONE:
+	default:
+		parity = 0;
+		break;
+	}
+
+	/* Stop bits */
+	if (conf->stopbits >= 2) {
+		stopbits = CSTOPB;
+	} else {
+		stopbits = 0;
+	}
+
+	/* Hardware Flow Control */
+	if (conf->flowcontrol_hw) {
+		flowcontrol_hw = CRTSCTS; /* Enable RTS/CTS (hardware) flow control */
+	} else {
+		flowcontrol_hw = 0;
+	}
+
+	port->tio.c_cflag |= (
+		csize |
+		parity |
+		stopbits |
+		flowcontrol_hw |
+		CREAD |          /* Enable receiver */
+		CLOCAL |         /* Ignore modem control lines */
+		HUPCL);
+	port->tio.c_iflag |= (IGNBRK);
+	port->tio.c_cc[VMIN] = 1;
+	port->tio.c_cc[VTIME] = 5;
 
 	/* clean the modem line and activate the settings for the port */
 	tcflush(port->fd, TCIFLUSH);
-	tcsetattr(port->fd, TCSANOW, &port->tio);
+	if (tcsetattr(port->fd, TCSANOW, &port->tio) < 0) { ret = errno; goto fail; }
 
-	return 0;
+fail:
+	return ret;
 #endif
 }
 
-int cserial_open(struct serial_port *port, char *device)
+int cserial_open(struct serial_port *port, struct serial_port_conf *conf, char *device)
 {
 	int ret = 0;
 #ifdef WIN32
@@ -113,8 +207,10 @@ fail:
 	if (!port->device) { ret = errno; goto fail_tty; }
 	strncpy(port->device, device, strlen(device));
 
-	ret = cserial_init(port);
-	if (ret) { goto fail_tty; }
+	if (conf) {
+		ret = cserial_init(port, conf);
+		if (ret) { goto fail_tty; }
+	}
 
 	return ret;
 fail_tty:
