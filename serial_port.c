@@ -143,7 +143,7 @@ int cserial_close(struct serial_port *port)
 	return 0;
 fail:
 	return -1;
-#else
+#else /* UNIX */
 	/* restore old port settings */
 	tcsetattr(port->fd, TCSANOW, &port->oldtio);
 	close(port->fd);
@@ -153,11 +153,21 @@ fail:
 
 int cserial_read(struct serial_port *port, void *buf, int size)
 {
-	return 0;
+	int ret;
+#ifdef WIN32
+#else /* UNIX */
+	ret = read(port->fd, buf, size);
+#endif
+	return ret;
 }
 
 int cserial_write(struct serial_port *port, const void *buf, int size)
 {
-	return 0;
+	int ret;
+#ifdef WIN32
+#else /* UNIX */
+	ret = write(port->fd, buf, size);
+#endif
+	return ret;
 }
 
