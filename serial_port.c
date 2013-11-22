@@ -1,5 +1,8 @@
 #include "serial_port.h"
 
+#ifdef WIN32
+#else /* UNIX */
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -8,8 +11,37 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#endif
+
 int cserial_init(struct serial_port *port)
 {
+#ifdef WIN32
+	DCB conf;
+	COMMTIMEOUTS timeouts;
+
+	memcpy(&conf, &port->oldDCB, sizeof(DCB));
+
+	conf.BaudRate = CBR_115200;
+	conf.ByteSize = 8;
+	conf.StopBits = ONESTOPBIT;
+	conf.Parity = NOPARITY;
+
+	if (!SetCommState(port->fd, &conf)) {
+		/* failed to set the state of com port */
+	}
+
+	timeouts.ReadIntervalTimeout = 50;
+	timeouts.ReadTotalTimeoutConstant = 50;
+	timeouts.ReadTotalTimeoutMultiplier = 10;
+	timeouts.WriteTotalTimeoutConstant = 50;
+	timeouts.WriteTotalTimeoutMultiplier = 10;
+
+	if (!SetCommTimeouts(port->fd, &timeouts)) {
+		/* failed to set the timeouts of com port */
+	}
+
+	return 0;
+#else /* UNIX */
 	/* save current serial port settings */
 	tcgetattr(port->fd, &port->oldtio);
 	/* clear struct for new port settings */
@@ -26,12 +58,47 @@ int cserial_init(struct serial_port *port)
 	tcsetattr(port->fd, TCSANOW, &port->tio);
 
 	return 0;
+#endif
 }
 
 int cserial_open(struct serial_port *port, char *device)
 {
 	int ret = 0;
+#ifdef WIN32
+	LPCSTR _device = (LPCSTR) device;
 
+	/* Keep reference to device opened. */
+	port->device = calloc(strlen(_device) + 1, sizeof(char));
+	if (!port->device) goto fail;
+	strncpy(port->device, _device, strlen(_device));
+
+	port->fd = CreateFile(_device, GENERIC_READ | GENERIC_WRITE,
+		0, 0, OPEN_EXISTING, 0, 0);
+
+	if (port->fd == INVALID_HANDLE_VALUE) {
+		port->fd = NULL;
+		goto fail_fd;
+	}
+
+	if (!GetCommState(port->fd, &port->oldDCB)) {
+		/* could not get the state of com port */
+		goto fail_comm_state;
+	}
+
+	if (!GetCommTimeouts(port->fd, &port->oldTimeouts)) {
+		/* failed to set the timeouts of com port */
+		goto fail_comm_state;
+	}
+
+	return 0;
+fail_comm_state:
+	CloseHandle(port->fd);
+	port->fd = NULL;
+fail_fd:
+	free(port->device);
+fail:
+	return -1;
+#else /* UNIX */
 	/*
 	 * Open modem device for reading and writing and not as a controlling
 	 * tty so we don't get killed if line noise sends Ctrl + C.
@@ -54,14 +121,34 @@ fail_tty:
 	close(port->fd);
 fail:
 	return ret;
+#endif
 }
 
 int cserial_close(struct serial_port *port)
 {
+#ifdef WIN32
+	if (port->fd == NULL) return 0;
+
+	PurgeComm(port->fd, PURGE_RXCLEAR | PURGE_TXCLEAR);
+
+	if (!SetCommState(port->fd, &port->oldDCB))
+		goto fail;
+	if (!SetCommTimeouts(port->fd, &port->oldTimeouts))
+		goto fail;
+	CloseHandle(port->fd);
+	port->fd = NULL;
+
+	free(port->device);
+
+	return 0;
+fail:
+	return -1;
+#else
 	/* restore old port settings */
 	tcsetattr(port->fd, TCSANOW, &port->oldtio);
 	close(port->fd);
 	return 0;
+#endif
 }
 
 int cserial_read(struct serial_port *port, void *buf, int size)

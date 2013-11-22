@@ -5,16 +5,31 @@
 extern "C" {
 #endif
 
+#ifdef WIN32
+
+#include <windows.h>
+
+#else /* UNIX */
+
 #include <termios.h>
 #include <signal.h>
+
+#endif
 
 #include <errno.h>
 
 struct serial_port {
+#ifdef WIN32
+	HANDLE fd;
+	DCB oldDCB;
+	COMMTIMEOUTS oldTimeouts;
+	char *device;
+#else /* UNIX */
 	int fd;
 	struct termios oldtio;
 	struct termios tio;
 	char *device;
+#endif
 };
 
 int cserial_open(struct serial_port *port, char *device);
