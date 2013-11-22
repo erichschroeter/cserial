@@ -1,0 +1,25 @@
+# Directories
+build/
+bin/
+
+# Auto-generated files
+*.swp
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dll
+*.so.*
+*.exe
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# CScope
+cscope*
