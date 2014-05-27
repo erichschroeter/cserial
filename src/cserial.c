@@ -13,7 +13,7 @@
 
 #endif
 
-int cserial_init(struct serial_port *port, struct serial_port_conf *conf)
+int cserial_init(struct cserial_port *port, struct cserial_port_conf *conf)
 {
 	unsigned int baud, csize, stopbits, parity, flowcontrol_hw;
 	int ret = 0;
@@ -155,7 +155,7 @@ fail:
 #endif
 }
 
-int cserial_open(struct serial_port *port, struct serial_port_conf *conf, char *device)
+int cserial_open(struct cserial_port *port, struct cserial_port_conf *conf, char *device)
 {
 	int ret = 0;
 #ifdef WIN32
@@ -220,7 +220,7 @@ fail:
 #endif
 }
 
-int cserial_close(struct serial_port *port)
+int cserial_close(struct cserial_port *port)
 {
 #ifdef WIN32
 	if (port->fd == NULL) return 0;
@@ -247,7 +247,7 @@ fail:
 #endif
 }
 
-int cserial_read(struct serial_port *port, void *buf, int size)
+int cserial_read(struct cserial_port *port, void *buf, int size)
 {
 	int ret;
 #ifdef WIN32
@@ -257,7 +257,7 @@ int cserial_read(struct serial_port *port, void *buf, int size)
 	return ret;
 }
 
-int cserial_write(struct serial_port *port, const void *buf, int size)
+int cserial_write(struct cserial_port *port, const void *buf, int size)
 {
 	int ret;
 #ifdef WIN32
