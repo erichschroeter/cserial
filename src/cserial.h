@@ -28,7 +28,7 @@ extern "C" {
 
 #endif
 
-#include <errno.h>
+CSERIALAPI const char * CSERIALCALL cserial_strerror(int errnum);
 
 struct cserial_port {
 #ifdef WIN32

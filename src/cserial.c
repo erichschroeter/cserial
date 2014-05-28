@@ -10,8 +10,17 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <errno.h>
 
 #endif
+
+CSERIALAPI const char * CSERIALCALL cserial_strerror(int errnum)
+{
+	switch (errnum) {
+	default:
+		return strerror(errnum);
+	}
+}
 
 int cserial_init(struct cserial_port *port, struct cserial_port_conf *conf)
 {
