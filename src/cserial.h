@@ -1,6 +1,18 @@
 #ifndef __CSERIAL_H
 #define __CSERIAL_H
 
+#ifdef _WIN32
+  #ifdef cserial_EXPORTS
+    #define CSERIALAPI __declspec(dllexport)
+  #else
+    #define CSERIALAPI __declspec(dllimport)
+  #endif
+  #define CSERIALCALL __cdecl
+#else
+  #define CSERIALAPI
+  #define CSERIALCALL
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
