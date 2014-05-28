@@ -255,6 +255,8 @@ fail:
 	/* restore old port settings */
 	tcsetattr(port->fd, TCSANOW, &port->oldtio);
 	close(port->fd);
+	port->fd = NULL;
+
 	return 0;
 #endif
 }
