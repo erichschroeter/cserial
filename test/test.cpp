@@ -43,7 +43,9 @@ TEST_CASE("Loopback send/receive", "[tx][rx][loopback]")
 	REQUIRE(rxDev != 0);
 
 	ret = cserial_open(&txPort, &conf, txDev);
+	INFO("tx cserial_open: " << cserial_strerror(ret));
 	REQUIRE(ret == 0);
+	INFO("rx cserial_open: " << cserial_strerror(ret));
 	ret = cserial_open(&rxPort, &conf, rxDev);
 	REQUIRE(ret == 0);
 
