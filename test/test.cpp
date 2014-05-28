@@ -58,6 +58,7 @@ TEST_CASE("Loopback send/receive", "[tx][rx][loopback]")
 	REQUIRE(ret == txLen);
 
 	ret = cserial_close(&txPort);
+	REQUIRE(ret == 0);
 	ret = cserial_close(&rxPort);
 	REQUIRE(ret == 0);
 
