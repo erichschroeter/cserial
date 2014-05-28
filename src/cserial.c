@@ -22,7 +22,8 @@ CSERIALAPI const char * CSERIALCALL cserial_strerror(int errnum)
 	}
 }
 
-int cserial_init(struct cserial_port *port, struct cserial_port_conf *conf)
+CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port,
+	struct cserial_port_conf *conf)
 {
 	unsigned int baud, csize, stopbits, parity, flowcontrol_hw;
 	int ret = 0;
@@ -164,7 +165,8 @@ fail:
 #endif
 }
 
-int cserial_open(struct cserial_port *port, struct cserial_port_conf *conf, char *device)
+CSERIALAPI int CSERIALCALL cserial_open(struct cserial_port *port,
+	struct cserial_port_conf *conf, char *device)
 {
 	int ret = 0;
 #ifdef WIN32
@@ -229,7 +231,7 @@ fail:
 #endif
 }
 
-void cserial_free(struct cserial_port *port)
+CSERIALAPI void CSERIALCALL cserial_free(struct cserial_port *port)
 {
 	if (port == NULL)
 		return;
@@ -241,7 +243,7 @@ void cserial_free(struct cserial_port *port)
 	free(port);
 }
 
-int cserial_close(struct cserial_port *port)
+CSERIALAPI int CSERIALCALL cserial_close(struct cserial_port *port)
 {
 #ifdef WIN32
 	if (port->fd == NULL) return 0;
@@ -270,7 +272,8 @@ fail:
 #endif
 }
 
-int cserial_read(struct cserial_port *port, void *buf, int size)
+CSERIALAPI int CSERIALCALL cserial_read(struct cserial_port *port,
+	void *buf, int size)
 {
 	int ret;
 #ifdef WIN32
@@ -280,7 +283,8 @@ int cserial_read(struct cserial_port *port, void *buf, int size)
 	return ret;
 }
 
-int cserial_write(struct cserial_port *port, const void *buf, int size)
+CSERIALAPI int CSERIALCALL cserial_write(struct cserial_port *port,
+	const void *buf, int size)
 {
 	int ret;
 #ifdef WIN32

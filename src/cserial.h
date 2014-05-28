@@ -55,12 +55,12 @@ struct cserial_port_conf {
 	int flowcontrol_hw;
 };
 
-int cserial_open(struct cserial_port *port, struct cserial_port_conf *conf, char *device);
-int cserial_init(struct cserial_port *port, struct cserial_port_conf *conf);
-int cserial_close(struct cserial_port *port);
-void cserial_free(struct cserial_port *port);
-int cserial_read(struct cserial_port *port, void *buf, int size);
-int cserial_write(struct cserial_port *port, const void *buf, int size);
+CSERIALAPI int CSERIALCALL cserial_open(struct cserial_port *port, struct cserial_port_conf *conf, char *device);
+CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port, struct cserial_port_conf *conf);
+CSERIALAPI int CSERIALCALL cserial_close(struct cserial_port *port);
+CSERIALAPI void CSERIALCALL cserial_free(struct cserial_port *port);
+CSERIALAPI int CSERIALCALL cserial_read(struct cserial_port *port, void *buf, int size);
+CSERIALAPI int CSERIALCALL cserial_write(struct cserial_port *port, const void *buf, int size);
 
 #ifdef __cplusplus
 }
