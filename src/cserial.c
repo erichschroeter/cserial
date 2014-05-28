@@ -220,6 +220,18 @@ fail:
 #endif
 }
 
+void cserial_free(struct cserial_port *port)
+{
+	if (port == NULL)
+		return;
+
+	if (port->device) {
+		free(port->device);
+	}
+
+	free(port);
+}
+
 int cserial_close(struct cserial_port *port)
 {
 #ifdef WIN32
