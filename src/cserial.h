@@ -1,6 +1,18 @@
 #ifndef __CSERIAL_H
 #define __CSERIAL_H
 
+#ifdef _WIN32
+  #ifdef cserial_EXPORTS
+    #define CSERIALAPI __declspec(dllexport)
+  #else
+    #define CSERIALAPI __declspec(dllimport)
+  #endif
+  #define CSERIALCALL __cdecl
+#else
+  #define CSERIALAPI
+  #define CSERIALCALL
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,7 +28,7 @@ extern "C" {
 
 #endif
 
-#include <errno.h>
+CSERIALAPI const char * CSERIALCALL cserial_strerror(int errnum);
 
 struct cserial_port {
 #ifdef WIN32
@@ -43,12 +55,12 @@ struct cserial_port_conf {
 	int flowcontrol_hw;
 };
 
-int cserial_open(struct cserial_port *port, struct cserial_port_conf *conf, char *device);
-int cserial_init(struct cserial_port *port, struct cserial_port_conf *conf);
-int cserial_close(struct cserial_port *port);
-void cserial_free(struct cserial_port *port);
-int cserial_read(struct cserial_port *port, void *buf, int size);
-int cserial_write(struct cserial_port *port, const void *buf, int size);
+CSERIALAPI int CSERIALCALL cserial_open(struct cserial_port *port, struct cserial_port_conf *conf, char *device);
+CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port, struct cserial_port_conf *conf);
+CSERIALAPI int CSERIALCALL cserial_close(struct cserial_port *port);
+CSERIALAPI void CSERIALCALL cserial_free(struct cserial_port *port);
+CSERIALAPI int CSERIALCALL cserial_read(struct cserial_port *port, void *buf, int size);
+CSERIALAPI int CSERIALCALL cserial_write(struct cserial_port *port, const void *buf, int size);
 
 #ifdef __cplusplus
 }
