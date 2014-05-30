@@ -55,7 +55,8 @@ struct cserial_port_conf {
 	int flowcontrol_hw;
 };
 
-CSERIALAPI int CSERIALCALL cserial_open(struct cserial_port *port, struct cserial_port_conf *conf, char *device);
+CSERIALAPI int CSERIALCALL cserial_open(struct cserial_port *port,
+	struct cserial_port_conf *conf, const char *device);
 CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port, struct cserial_port_conf *conf);
 CSERIALAPI int CSERIALCALL cserial_close(struct cserial_port *port);
 CSERIALAPI void CSERIALCALL cserial_free(struct cserial_port *port);

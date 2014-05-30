@@ -166,7 +166,7 @@ fail:
 }
 
 CSERIALAPI int CSERIALCALL cserial_open(struct cserial_port *port,
-	struct cserial_port_conf *conf, char *device)
+	struct cserial_port_conf *conf, const char *device)
 {
 	int ret = 0;
 #ifdef WIN32
