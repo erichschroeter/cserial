@@ -34,19 +34,23 @@ TEST_CASE("Loopback send/receive", "[tx][rx][loopback]")
 
 	/* Get the device file to transmit data out. */
 	txDev = getenv("CSERIAL_TX");
-	INFO("transmitting using: " << txDev);
+	if (txDev == 0) {
+		WARN("CSERIAL_TX not defined");
+	}
 	REQUIRE(txDev != 0);
 
 	/* Get the device file to receive data in. */
 	rxDev = getenv("CSERIAL_RX");
-	INFO("receiving using: " << rxDev);
+	if (rxDev == 0) {
+		WARN("CSERIAL_RX not defined");
+	}
 	REQUIRE(rxDev != 0);
 
 	ret = cserial_open(&txPort, &conf, txDev);
-	INFO("tx cserial_open: " << cserial_strerror(ret));
+	INFO("cserial_open(" << txDev << "): " << cserial_strerror(ret));
 	REQUIRE(ret == 0);
-	INFO("rx cserial_open: " << cserial_strerror(ret));
 	ret = cserial_open(&rxPort, &conf, rxDev);
+	INFO("cserial_open(" << rxDev << "): " << cserial_strerror(ret));
 	REQUIRE(ret == 0);
 
 	txLen = strlen(tx);
