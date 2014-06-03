@@ -335,6 +335,8 @@ CSERIALAPI int CSERIALCALL cserial_read(struct cserial_port *port,
 {
 	int ret;
 #ifdef WIN32
+	DWORD bytesRead;
+	ret = ReadFile(port->fd, buf, size, &bytesRead, NULL);
 #else /* UNIX */
 	ret = read(port->fd, buf, size);
 #endif
