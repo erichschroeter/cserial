@@ -348,6 +348,8 @@ CSERIALAPI int CSERIALCALL cserial_write(struct cserial_port *port,
 {
 	int ret;
 #ifdef WIN32
+	DWORD bytesWritten;
+	ret = WriteFile(port->fd, buf, size, &bytesWritten, NULL);
 #else /* UNIX */
 	ret = write(port->fd, buf, size);
 #endif
