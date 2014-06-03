@@ -236,7 +236,10 @@ CSERIALAPI int CSERIALCALL cserial_open(struct cserial_port *port,
 
 	/* Keep reference to device opened. */
 	port->device = calloc(strlen(_device) + 1, sizeof(char));
-	if (!port->device) goto fail;
+	if (!port->device) {
+		ret = ENOMEM;
+		goto fail;
+	}
 	strncpy(port->device, _device, strlen(_device));
 
 	port->fd = CreateFile(_device, GENERIC_READ | GENERIC_WRITE,
@@ -244,27 +247,28 @@ CSERIALAPI int CSERIALCALL cserial_open(struct cserial_port *port,
 
 	if (port->fd == INVALID_HANDLE_VALUE) {
 		port->fd = NULL;
+		ret = GetLastError();
 		goto fail_fd;
 	}
 
 	if (!GetCommState(port->fd, &port->oldDCB)) {
 		/* could not get the state of com port */
+		ret = GetLastError();
 		goto fail_comm_state;
 	}
 
 	if (!GetCommTimeouts(port->fd, &port->oldTimeouts)) {
 		/* failed to set the timeouts of com port */
+		ret = GetLastError();
 		goto fail_comm_state;
 	}
 
-	return 0;
+	goto success;
 fail_comm_state:
 	CloseHandle(port->fd);
 	port->fd = NULL;
 fail_fd:
 	free(port->device);
-fail:
-	return -1;
 #else /* UNIX */
 	/*
 	 * Open modem device for reading and writing and not as a controlling
@@ -280,17 +284,20 @@ fail:
 	if (!port->device) { ret = errno; goto fail_tty; }
 	strncpy(port->device, device, strlen(device));
 
+	goto success;
+fail_tty:
+	close(port->fd);
+#endif
+fail:
+	return ret;
+
+success:
+	/* Auto-configure if conf was specified. */
 	if (conf) {
 		ret = cserial_init(port, conf);
-		if (ret) { goto fail_tty; }
 	}
 
 	return ret;
-fail_tty:
-	close(port->fd);
-fail:
-	return ret;
-#endif
 }
 
 CSERIALAPI void CSERIALCALL cserial_free(struct cserial_port *port)
