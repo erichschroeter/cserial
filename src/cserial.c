@@ -28,17 +28,75 @@ CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port,
 	unsigned int baud, csize, stopbits, parity, flowcontrol_hw;
 	int ret = 0;
 #ifdef WIN32
-	DCB conf;
+	DCB dcb;
 	COMMTIMEOUTS timeouts;
 
-	memcpy(&conf, &port->oldDCB, sizeof(DCB));
+	memcpy(&dcb, &port->oldDCB, sizeof(DCB));
 
-	conf.BaudRate = CBR_115200;
-	conf.ByteSize = 8;
-	conf.StopBits = ONESTOPBIT;
-	conf.Parity = NOPARITY;
+	/* Baud rate */
+	if (conf->baud >= 256000) {
+		dcb.BaudRate = CBR_256000;
+	} else if (conf->baud >= 128000) {
+		dcb.BaudRate = CBR_128000;
+	} else if (conf->baud >= 115200) {
+		dcb.BaudRate = CBR_115200;
+	} else if (conf->baud >= 57600) {
+		dcb.BaudRate = CBR_57600;
+	} else if (conf->baud >= 38400) {
+		dcb.BaudRate = CBR_38400;
+	} else if (conf->baud >= 19200) {
+		dcb.BaudRate = CBR_19200;
+	} else if (conf->baud >= 9600) {
+		dcb.BaudRate = CBR_9600;
+	} else if (conf->baud >= 4800) {
+		dcb.BaudRate = CBR_4800;
+	} else if (conf->baud >= 2400) {
+		dcb.BaudRate = CBR_2400;
+	} else if (conf->baud >= 1200) {
+		dcb.BaudRate = CBR_1200;
+	} else if (conf->baud >= 600) {
+		dcb.BaudRate = CBR_600;
+	} else if (conf->baud >= 300) {
+		dcb.BaudRate = CBR_300;
+	} else if (conf->baud >= 110) {
+		dcb.BaudRate = CBR_110;
+	} else {
+		dcb.BaudRate = CBR_115200;
+	}
 
-	if (!SetCommState(port->fd, &conf)) {
+	/* Character size */
+	if (conf->csize <= 0) {
+		/* Default to 8 bit char. */
+		dcb.ByteSize = 8;
+	} else {
+		dcb.ByteSize = conf->csize;
+	}
+
+	/* Parity */
+	switch (conf->parity) {
+	case EVENPARITY:
+	case MARKPARITY:
+	case NOPARITY:
+	case ODDPARITY:
+	case SPACEPARITY:
+		dcb.Parity = conf->parity;
+		break;
+	default:
+		dcb.Parity = NOPARITY;
+		break;
+	}
+
+	/* Stop bits */
+	if (conf->stopbits > 2) {
+		dcb.StopBits = ONE5STOPBITS;
+	} else if (conf->stopbits >= 1) {
+		dcb.StopBits = ONESTOPBIT;
+	} else {
+		/* Default to 2 stop bits if stopbits = 0 */
+		dcb.StopBits = TWOSTOPBITS;
+	}
+
+	if (!SetCommState(port->fd, &dcb)) {
 		/* failed to set the state of com port */
 	}
 
