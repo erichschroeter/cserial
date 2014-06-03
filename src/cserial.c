@@ -3,16 +3,17 @@
 #ifdef WIN32
 #else /* UNIX */
 
-#include <stdio.h>
 #include <fcntl.h>
 #include <termios.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <errno.h>
 
 #endif
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
 
 CSERIALAPI const char * CSERIALCALL cserial_strerror(int errnum)
 {
