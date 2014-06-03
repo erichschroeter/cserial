@@ -314,31 +314,40 @@ CSERIALAPI void CSERIALCALL cserial_free(struct cserial_port *port)
 
 CSERIALAPI int CSERIALCALL cserial_close(struct cserial_port *port)
 {
+	int ret = 0;
+
+	if (port->fd == NULL) goto success;
 #ifdef WIN32
-	if (port->fd == NULL) return 0;
 
 	PurgeComm(port->fd, PURGE_RXCLEAR | PURGE_TXCLEAR);
 
-	if (!SetCommState(port->fd, &port->oldDCB))
+	if (!SetCommState(port->fd, &port->oldDCB)) {
+		ret = GetLastError();
 		goto fail;
-	if (!SetCommTimeouts(port->fd, &port->oldTimeouts))
+	}
+	if (!SetCommTimeouts(port->fd, &port->oldTimeouts)) {
+		ret = GetLastError();
 		goto fail;
+	}
 	CloseHandle(port->fd);
-	port->fd = NULL;
 
-	free(port->device);
-
-	return 0;
-fail:
-	return -1;
+	goto success;
 #else /* UNIX */
 	/* restore old port settings */
-	tcsetattr(port->fd, TCSANOW, &port->oldtio);
+	if (tcsetattr(port->fd, TCSANOW, &port->oldtio) < 0) {
+		ret = errno;
+		goto fail;
+	}
 	close(port->fd);
-	port->fd = NULL;
 
-	return 0;
+	goto success;
 #endif
+fail:
+	return ret;
+success:
+	free(port->device);
+	port->fd = NULL;
+	return 0;
 }
 
 CSERIALAPI int CSERIALCALL cserial_read(struct cserial_port *port,
