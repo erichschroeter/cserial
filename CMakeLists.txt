@@ -11,7 +11,14 @@ set(PROJECT_DESCRIPTION "Cross platform library for serial port.")
 
 # uncomment line below to enable debug messages
 #add_definitions(-DDEBUG)
-#add_definitions(-Dcserial_EXPORTS)
+
+# Windows requires special attributes that specify storage-class information
+# in order to indicate that a function or object is imported or exported from
+# a DLL. The MSVC depends on these attributes to create the .lib which is
+# required for linking.
+if(WIN32)
+	add_definitions(-Dcserial_EXPORTS)
+endif(WIN32)
 
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 0)
