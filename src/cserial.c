@@ -25,7 +25,6 @@ CSERIALAPI const char * CSERIALCALL cserial_strerror(int errnum)
 CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port,
 	struct cserial_port_conf *conf)
 {
-	unsigned int baud, csize, stopbits, parity, flowcontrol_hw;
 	int ret = 0;
 #ifdef WIN32
 	DCB dcb;
@@ -98,6 +97,8 @@ CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port,
 
 	if (!SetCommState(port->fd, &dcb)) {
 		/* failed to set the state of com port */
+		ret = GetLastError();
+		goto fail;
 	}
 
 	timeouts.ReadIntervalTimeout = 50;
@@ -108,10 +109,13 @@ CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port,
 
 	if (!SetCommTimeouts(port->fd, &timeouts)) {
 		/* failed to set the timeouts of com port */
+		ret = GetLastError();
+		goto fail;
 	}
 
-	return 0;
 #else /* UNIX */
+	unsigned int baud, csize, stopbits, parity, flowcontrol_hw;
+
 	/* save current serial port settings */
 	tcgetattr(port->fd, &port->oldtio);
 	/* clear struct for new port settings */
@@ -218,9 +222,9 @@ CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port,
 	tcflush(port->fd, TCIFLUSH);
 	if (tcsetattr(port->fd, TCSANOW, &port->tio) < 0) { ret = errno; goto fail; }
 
+#endif
 fail:
 	return ret;
-#endif
 }
 
 CSERIALAPI int CSERIALCALL cserial_open(struct cserial_port *port,
