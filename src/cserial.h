@@ -33,15 +33,16 @@ CSERIALAPI const char * CSERIALCALL cserial_strerror(int errnum);
 struct cserial_port {
 #ifdef WIN32
 	HANDLE fd;
+	DCB dcb;
 	DCB oldDCB;
+	COMMTIMEOUTS timeouts;
 	COMMTIMEOUTS oldTimeouts;
-	char *device;
 #else /* UNIX */
 	int fd;
 	struct termios oldtio;
 	struct termios tio;
-	char *device;
 #endif
+	char *device;
 };
 
 struct cserial_port_conf {

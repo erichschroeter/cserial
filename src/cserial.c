@@ -28,87 +28,83 @@ CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port,
 {
 	int ret = 0;
 #ifdef WIN32
-	DCB dcb;
-	COMMTIMEOUTS timeouts;
-
-	memcpy(&dcb, &port->oldDCB, sizeof(DCB));
-
 	/* Baud rate */
 	if (conf->baud >= 256000) {
-		dcb.BaudRate = CBR_256000;
+		port->dcb.BaudRate = CBR_256000;
 	} else if (conf->baud >= 128000) {
-		dcb.BaudRate = CBR_128000;
+		port->dcb.BaudRate = CBR_128000;
 	} else if (conf->baud >= 115200) {
-		dcb.BaudRate = CBR_115200;
+		port->dcb.BaudRate = CBR_115200;
 	} else if (conf->baud >= 57600) {
-		dcb.BaudRate = CBR_57600;
+		port->dcb.BaudRate = CBR_57600;
 	} else if (conf->baud >= 38400) {
-		dcb.BaudRate = CBR_38400;
+		port->dcb.BaudRate = CBR_38400;
 	} else if (conf->baud >= 19200) {
-		dcb.BaudRate = CBR_19200;
+		port->dcb.BaudRate = CBR_19200;
 	} else if (conf->baud >= 9600) {
-		dcb.BaudRate = CBR_9600;
+		port->dcb.BaudRate = CBR_9600;
 	} else if (conf->baud >= 4800) {
-		dcb.BaudRate = CBR_4800;
+		port->dcb.BaudRate = CBR_4800;
 	} else if (conf->baud >= 2400) {
-		dcb.BaudRate = CBR_2400;
+		port->dcb.BaudRate = CBR_2400;
 	} else if (conf->baud >= 1200) {
-		dcb.BaudRate = CBR_1200;
+		port->dcb.BaudRate = CBR_1200;
 	} else if (conf->baud >= 600) {
-		dcb.BaudRate = CBR_600;
+		port->dcb.BaudRate = CBR_600;
 	} else if (conf->baud >= 300) {
-		dcb.BaudRate = CBR_300;
+		port->dcb.BaudRate = CBR_300;
 	} else if (conf->baud >= 110) {
-		dcb.BaudRate = CBR_110;
+		port->dcb.BaudRate = CBR_110;
 	} else {
-		dcb.BaudRate = CBR_115200;
+		port->dcb.BaudRate = CBR_115200;
 	}
 
 	/* Character size */
 	if (conf->csize <= 0) {
 		/* Default to 8 bit char. */
-		dcb.ByteSize = 8;
+		port->dcb.ByteSize = 8;
 	} else {
-		dcb.ByteSize = conf->csize;
+		port->dcb.ByteSize = conf->csize;
 	}
 
 	/* Parity */
+	/* Unsupported: [ MARKPARITY, SPACEPARITY ] */
+	port->dcb.fParity = TRUE;
 	switch (conf->parity) {
-	case EVENPARITY:
-	case MARKPARITY:
-	case NOPARITY:
-	case ODDPARITY:
-	case SPACEPARITY:
-		dcb.Parity = conf->parity;
+	case PARITY_ODD:
+		port->dcb.Parity = ODDPARITY;
 		break;
+	case PARITY_EVEN:
+		port->dcb.Parity = EVENPARITY;
+		break;
+	case PARITY_NONE:
 	default:
-		dcb.Parity = NOPARITY;
+		port->dcb.Parity = NOPARITY;
+		port->dcb.fParity = FALSE; /* Disable parity check */
 		break;
 	}
 
 	/* Stop bits */
-	if (conf->stopbits > 2) {
-		dcb.StopBits = ONE5STOPBITS;
-	} else if (conf->stopbits >= 1) {
-		dcb.StopBits = ONESTOPBIT;
+	/* Unsupported: ONE5STOPBITS */
+	if (conf->stopbits >= 2) {
+		port->dcb.StopBits = TWOSTOPBITS;
 	} else {
-		/* Default to 2 stop bits if stopbits = 0 */
-		dcb.StopBits = TWOSTOPBITS;
+		port->dcb.StopBits = ONESTOPBIT;
 	}
 
-	if (!SetCommState(port->fd, &dcb)) {
+	if (!SetCommState(port->fd, &port->dcb)) {
 		/* failed to set the state of com port */
 		ret = GetLastError();
 		goto fail;
 	}
 
-	timeouts.ReadIntervalTimeout = 50;
-	timeouts.ReadTotalTimeoutConstant = 50;
-	timeouts.ReadTotalTimeoutMultiplier = 10;
-	timeouts.WriteTotalTimeoutConstant = 50;
-	timeouts.WriteTotalTimeoutMultiplier = 10;
+	port->timeouts.ReadIntervalTimeout = 50;
+	port->timeouts.ReadTotalTimeoutConstant = 50;
+	port->timeouts.ReadTotalTimeoutMultiplier = 10;
+	port->timeouts.WriteTotalTimeoutConstant = 50;
+	port->timeouts.WriteTotalTimeoutMultiplier = 10;
 
-	if (!SetCommTimeouts(port->fd, &timeouts)) {
+	if (!SetCommTimeouts(port->fd, &port->timeouts)) {
 		/* failed to set the timeouts of com port */
 		ret = GetLastError();
 		goto fail;
