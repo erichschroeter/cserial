@@ -28,6 +28,17 @@ CSERIALAPI int CSERIALCALL cserial_init(struct cserial_port *port,
 {
 	int ret = 0;
 #ifdef WIN32
+	memset(&port->dcb, 0, sizeof(port->dcb));
+
+	port->dcb.DCBlength = sizeof(port->dcb);
+	/*
+	 * Specifies whether binary mode is enabled. The function does not support
+	 * nonbinary mode transfers, so this member must be set to TRUE.
+	 */
+	port->dcb.fBinary = TRUE;
+	port->dcb.fDtrControl = DTR_CONTROL_DISABLE;
+	port->dcb.fRtsControl = RTS_CONTROL_DISABLE;
+
 	/* Baud rate */
 	if (conf->baud >= 256000) {
 		port->dcb.BaudRate = CBR_256000;
